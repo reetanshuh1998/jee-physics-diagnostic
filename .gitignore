@@ -1,0 +1,17 @@
+# Frontend
+platform/frontend/node_modules/
+platform/frontend/.next/
+platform/frontend/.env.local
+
+# Backend
+platform/backend/venv/
+platform/backend/__pycache__/
+platform/backend/database.db
+platform/backend/sample_data.json
+
+# Data
+jee question/
+*.pdf
+
+# OS
+.DS_Store
