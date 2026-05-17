@@ -1,26 +1,16 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
-import models
-from database import engine, get_db
 import xgboost as xgb
 import pandas as pd
 import os
+from supabase import create_client, Client
 
-# Create tables
-models.Base.metadata.create_all(bind=engine)
+SUPABASE_URL = "https://druruykbefdlbmbvrglb.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRydXJ1eWtiZWZkbGJtYnZyZ2xiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NjI3ODAsImV4cCI6MjA5NDUzODc4MH0.GIMvJQ4_w5G3WjEvaOZGLvX122iT78H1HfaWtsQMqWw"
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI(title="JEE Physics Diagnostic API")
-
-# Load Model
-model_path = os.path.join(os.path.dirname(__file__), "mastery_model.json")
-mastery_model = None
-if os.path.exists(model_path):
-    mastery_model = xgb.XGBClassifier()
-    mastery_model.load_model(model_path)
-    print("XGBoost model loaded successfully.")
-else:
-    print(f"Warning: Model file not found at {model_path}")
 
 origins = ["*"]
 
@@ -32,6 +22,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Load Model
+model_path = os.path.join(os.path.dirname(__file__), "mastery_model.json")
+mastery_model = None
+if os.path.exists(model_path):
+    mastery_model = xgb.XGBClassifier()
+    mastery_model.load_model(model_path)
+    print("XGBoost model loaded successfully.")
+else:
+    print(f"Warning: Model file not found at {model_path}")
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the JEE Physics Diagnostic API"}
@@ -42,48 +42,54 @@ def health_check():
 
 # Questions Endpoints
 @app.get("/questions")
-def get_questions(db: Session = Depends(get_db)):
-    questions = db.query(models.Question).all()
-    return questions
+def get_questions():
+    try:
+        response = supabase.table('questions').select('*').execute()
+        return response.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/questions")
-def create_question(question: dict, db: Session = Depends(get_db)):
-    db_question = models.Question(**question)
-    db.add(db_question)
-    db.commit()
-    db.refresh(db_question)
-    return db_question
+def create_question(question: dict):
+    try:
+        response = supabase.table('questions').insert(question).execute()
+        return response.data[0]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Users Endpoints
 @app.post("/users")
-def create_user(user: dict, db: Session = Depends(get_db)):
-    db_user = models.User(**user)
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+def create_user(user: dict):
+    try:
+        response = supabase.table('users').insert(user).execute()
+        return response.data[0]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Test Attempts Endpoints
 @app.post("/test-attempts")
-def create_test_attempt(attempt: dict, db: Session = Depends(get_db)):
-    db_attempt = models.TestAttempt(**attempt)
-    db.add(db_attempt)
-    db.commit()
-    db.refresh(db_attempt)
-    return db_attempt
+def create_test_attempt(attempt: dict):
+    try:
+        response = supabase.table('test_attempts').insert(attempt).execute()
+        return response.data[0]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/test-attempts/{user_id}")
-def get_test_attempts(user_id: str, db: Session = Depends(get_db)):
-    attempts = db.query(models.TestAttempt).filter(models.TestAttempt.user_id == user_id).all()
-    return attempts
+def get_test_attempts(user_id: str):
+    try:
+        response = supabase.table('test_attempts').select('*').eq('user_id', user_id).execute()
+        return response.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/question-attempts")
-def create_question_attempt(attempt: dict, db: Session = Depends(get_db)):
-    db_attempt = models.QuestionAttempt(**attempt)
-    db.add(db_attempt)
-    db.commit()
-    db.refresh(db_attempt)
-    return db_attempt
+def create_question_attempt(attempt: dict):
+    try:
+        response = supabase.table('question_attempts').insert(attempt).execute()
+        return response.data[0]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/predict-mastery")
 def predict_mastery(data: dict):
