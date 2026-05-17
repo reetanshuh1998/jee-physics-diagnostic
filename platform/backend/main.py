@@ -22,10 +22,7 @@ if os.path.exists(model_path):
 else:
     print(f"Warning: Model file not found at {model_path}")
 
-origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
