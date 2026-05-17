@@ -24,10 +24,10 @@ export default function DashboardPage() {
     }
     checkSession();
   }, [router]);
-
   const fetchAttempts = async (userId) => {
     try {
-      const response = await fetch(`http://localhost:8000/test-attempts/${userId}`);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/test-attempts/${userId}`);
       const data = await response.json();
       setAttempts(data);
     } catch (error) {

@@ -7,6 +7,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export default function TestPage() {
   const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -45,7 +47,7 @@ export default function TestPage() {
 
   const createTestAttempt = async (userId) => {
     try {
-      const response = await fetch('http://localhost:8000/test-attempts', {
+      const response = await fetch(`${API_URL}/test-attempts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -67,7 +69,7 @@ export default function TestPage() {
   useEffect(() => {
     async function fetchQuestions() {
       try {
-        const response = await fetch('http://localhost:8000/questions');
+        const response = await fetch(`${API_URL}/questions`);
         const data = await response.json();
         
         const parsedQuestions = data.map((q) => {
@@ -183,7 +185,7 @@ export default function TestPage() {
     };
     
     try {
-      await fetch('http://localhost:8000/question-attempts', {
+      await fetch(`${API_URL}/question-attempts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -226,7 +228,7 @@ export default function TestPage() {
 
       // Call AI Prediction for each question
       try {
-        const response = await fetch('http://localhost:8000/predict-mastery', {
+        const response = await fetch(`${API_URL}/predict-mastery`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
