@@ -14,7 +14,7 @@ export default function TestPage() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [markedForReview, setMarkedForReview] = useState([]);
-  const [timeLeft, setTimeLeft] = useState(180 * 60); // 3 hours in seconds
+  const [timeLeft, setTimeLeft] = useState(60 * 60); // 1 hour in seconds
   const [loading, setLoading] = useState(true);
 
   // Auth State
@@ -72,7 +72,11 @@ export default function TestPage() {
         const response = await fetch(`${API_URL}/questions`);
         const data = await response.json();
         
-        const parsedQuestions = data.map((q) => {
+        // Shuffle questions randomly and take only 30
+        const shuffled = data.sort(() => 0.5 - Math.random());
+        const selected = shuffled.slice(0, 30);
+        
+        const parsedQuestions = selected.map((q) => {
           const content = JSON.parse(q.content);
           return {
             id: q.id,
